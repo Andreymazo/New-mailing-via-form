@@ -1,0 +1,35 @@
+
+<table class="table table-light table-striped table-hover align-items-center  text-center">
+          <thead>
+            <tr>
+
+                 <th scope="col">Link</th>
+                <th scope="col">Text</th>
+                <th scope="col">Status</th>
+                <th scope="col">Period</th>
+
+                <th scope="col">Кнопка входа в свой аккаунт</th>
+
+            </tr>
+          </thead>
+
+          <tbody>
+           {{object}}
+                <tr>
+                    <td>{{i.link}}</td>
+                    <td>{{i.text}}</td>
+                    <td>{{i.status}}</td>
+                    <td>{{i.period}}</td>
+                    <td>##
+                       <td>
+                        <a class="btn.btn-default" href="{% url 'mailing:Emails_list' %}" >Войдите в свой аккаунт</a>
+                        </td>
+
+                    </td>
+
+                </tr>
+
+
+
+          </tbody>
+        </table>
