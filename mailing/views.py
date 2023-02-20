@@ -160,6 +160,7 @@ class ClientUpdateViewWithSubject(CreateView):
         return context_data
 
     def form_valid(self, form):
+        f = Subject.objects.all()
         context_data = self.get_context_data()
         formset = context_data['formset']
         print(self.request.method)
@@ -168,8 +169,11 @@ class ClientUpdateViewWithSubject(CreateView):
             if formset.is_valid():
                 formset.instance = self.object
                 formset.save()
-                print(self.object.link)
-                send(form.instance.link)
+                # print(self.object.link)
+                for i in f:
+                    # print(i.email)
+                    send(i.email)
+                # send(form.instance.link)
 
             else:
                 return super(ClientUpdateViewWithSubject, self).form_invalid(form)
