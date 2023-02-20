@@ -126,7 +126,9 @@ class Subject(models.Model):
     email_subj = models.ForeignKey(Emails, on_delete=CASCADE, default=1)
     mssg_subj = models.ForeignKey(Mssg, on_delete=CASCADE, default=1)
     email = models.EmailField(max_length=50, verbose_name='Емэйл в форме сабджекта', default='andreymazo@mail.ru')
+    topic = models.CharField(max_length=100, verbose_name='Тема сообщения в форме сабджекта', default='and here')
     text = models.CharField(max_length=100, verbose_name='Текст сообщения в форме сабджекта', default='and here')
 
+
     def __str__(self):
-        return f"{self.name} {self.email} {self.text}"
+        return f"{self.name} {self.email} {self.topic} {self.text} "

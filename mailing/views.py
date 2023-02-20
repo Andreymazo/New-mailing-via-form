@@ -13,6 +13,7 @@ from django.views.generic import DetailView, DeleteView, CreateView, ListView, U
 
 from mailing.forms import ClientForm, SignupForm, SigninForm, MssgForm, EmailsForm
 from mailing.models import Client, Mssg, Emails, Subject
+from mailing.service import send
 
 
 class Command(BaseCommand):
@@ -167,7 +168,9 @@ class ClientUpdateViewWithSubject(CreateView):
             if formset.is_valid():
                 formset.instance = self.object
                 formset.save()
-                # send(form.instance.email)
+                print(self.object.link)
+                send(form.instance.link)
+
             else:
                 return super(ClientUpdateViewWithSubject, self).form_invalid(form)
         return super(ClientUpdateViewWithSubject, self).form_valid(form)

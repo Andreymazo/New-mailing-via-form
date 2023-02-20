@@ -1,3 +1,6 @@
+import time
+from smtplib import SMTPDataError, SMTPResponseException, SMTPRecipientsRefused
+
 from django.conf import settings
 from django.core.mail import send_mail
 from django.core.management import BaseCommand
@@ -5,6 +8,7 @@ from django.core.management import BaseCommand
 from mailing.models import Mssg, Client, Emails, Mailinglog, Subject
 from django.core.mail import BadHeaderError, send_mail
 from django.http import HttpResponse, HttpResponseRedirect
+
 
 # def gg(self, *args, **options):
 #     jj = [{"g": 2}]
@@ -34,25 +38,29 @@ class Command(BaseCommand):
     def handle(self, *args, **options):
 
         # H = set()# Mozhno iskluchit povtorenia otpravki odnih i teh zhe soobshenii
-        def mailing():
-            h = Emails.objects.all()
-            m = Mssg.objects.all()
-            mm = Client.objects.all()
-            f = Subject.objects.all()
 
-            # for i in h:##Emails
-            #     for ii in mm:##Imena
-            #     # print(ii)
-            for iii in m:  ##Soobshenia
-            #     print(iii.text)###Vidast temu soobshenia
-            #             print(iii)
+            def mailing():
+                h = Emails.objects.all()
+                m = Mssg.objects.all()
+                mm = Client.objects.all()
+                f = Subject.objects.all()
+
+                # for i in h:##Emails
+                #     for ii in mm:##Imena
+                #     # print(ii)
+                # for iii in m:  ##Soobshenia
+                    #     print(iii.text)###Vidast temu soobshenia
+                    #             print(iii)
                 for iiii in f:
-            #     # print(iiii.email)#Cherez subject spisok emailov dlia otpravki
-            #     print(iiii.text)
+                    time.sleep(1)
+                    try:
+                    #     # print(iiii.email)#Cherez subject spisok emailov dlia otpravki
+                    # print(iiii.email)
 
-                # emails = ['andreymazo@mail.ru', 'andreymazo2@mail.ru']
+
+                        # emails = ['andreymazo@mail.ru', 'andreymazo2@mail.ru']
                         res = send_mail(
-                            subject=f'{iii.text}',
+                            subject=f'{iiii.topic}',
                             message=f'{iiii.text}',
                             from_email=settings.EMAIL_HOST_USER,
                             recipient_list=[iiii.email],
@@ -62,14 +70,32 @@ class Command(BaseCommand):
                             connection=None,
                             html_message=None,
                         )
-                        print(f'Pechataem res {res}')
+                        print(f'Pechataem res {res} Otpravleno na {iiii.email}')
                         if res:
                             Mailinglog.objects.create(
-                                        ####Zapisivaem pochtu, resultat otpravki i vremia samo zapisivaetsia#########
-                                    mailing=iiii.email,
-                                    result=res
-                                                    )
+                                ####Zapisivaem pochtu, resultat otpravki i vremia samo zapisivaetsia#########
+                                mailing=iiii.email,
+                                result=res
+                            )
+                    except SMTPResponseException as e:
+                        error_code = e.smtp_code
+                        error_message = e.smtp_error
+                        if error_code == 550:  # возможно, по-другому надо доставать, типа e.errno
+                            print("Error code:" + f'{error_code}')
+                            print("Message:" + f'{error_message}')
+                        pass
+                    except SMTPRecipientsRefused as e:
+                        print(e)
+                        pass
+
+
             mailing()
+        # except SMTPDataError:
+
+
+
+
+
             # def mailing(request):#
         # m = Mssg.objects.all()
 

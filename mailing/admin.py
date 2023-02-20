@@ -28,4 +28,4 @@ class EmailsAdmin(admin.ModelAdmin):
 @admin.register(Subject)
 class SubjectAdmin(admin.ModelAdmin):
     list_display = ("name", "email_subj", "mssg_subj", "email", "text")
-    list_filter = ["name"]
+    list_filter = ["email"]

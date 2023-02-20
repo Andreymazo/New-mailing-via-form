@@ -170,10 +170,20 @@ EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
 # from mailing.models import Mssg
 # print(Mssg.topic)
 #, ['pos_arg1', 'pos_arg2'], {'verbose': 'key_arg'}
-CRONJOBS = [
-    ('*/1 * * * *', 'mailing.cron.mailing')
-]
+
 LOGIN_URL = 'Client_list/'
 LOGIN_REDIRECT_URL = 'Client_list/'
 LOGOUT_REDIRECT_URL = '/'
 AUTH_USER_MODEL = 'mailing.Client'
+
+CRONJOBS = [
+    ('*/1 * * * *', 'mailing.cron.mailing')
+]
+REDIS_HOST = '0.0.0.0'
+REDIS_PORT = '6379'
+CELERY_BROKER_URL = 'redis://' + REDIS_HOST + ':' + REDIS_PORT + '/0'
+CELERY_BROKER_TRANSPORT_OPTIONS = {'visibility_timeout': 3600}
+CELERY_RESULT_BACKEND = 'redis://' + REDIS_HOST + ':' + REDIS_PORT + '/0'
+CELERY_ACCEPT_CONTENT =['application/json']
+CELERY_RESULT_SERIALIZER = 'json'
+
