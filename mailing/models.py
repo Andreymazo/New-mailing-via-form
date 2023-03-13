@@ -33,6 +33,12 @@ class CustomUserManager(UserManager):
 
 class Client(AbstractUser):
     objects = CustomUserManager()
+    # is_verified = models.BooleanField(default=False)
+    verify_token = models.CharField(max_length=35, verbose_name='Токен верификации',
+                                    **NULLABLE)
+    verify_token_expired = models.DateTimeField(**NULLABLE,
+                                                verbose_name='Дата истечения токена')
+    new_password = models.CharField(verbose_name="новый пароль", max_length=128, **NULLABLE)
 
 
     username = None
@@ -49,7 +55,7 @@ class Client(AbstractUser):
     class Meta:
         verbose_name = "Клиент"
         verbose_name_plural = 'Клиенты'
-
+        permissions = [("view_email", "can view email")]
     def __str__(self):
         return f'{self.name} {self.email}'
 
@@ -64,21 +70,21 @@ class Mssg(models.Model):
         # (STATUS_CREATED, 'создано'),
         (STATUS_STARTED, True),
     )
-    PERIOD_DAY = 86400
+    PERIOD_DAY = 120
     PERIOD_WEEK = 604800
     PERIOD_MONTH = 2419200
     PERIODS = (
-        (PERIOD_DAY, 'день=86400'),
+        (PERIOD_DAY, 'день=120'),
         (PERIOD_WEEK, 'неделя=604800'),
         (PERIOD_MONTH, 'месяц=2419200'),
     )
 
     link = models.ForeignKey('mailing.Client', max_length=100, verbose_name='Какому клиенту относится',
                              on_delete=models.CASCADE, **NULLABLE, default=1)
-    text = models.CharField(max_length=100, verbose_name='Тема сообщения')
+    text = models.CharField(max_length=100, verbose_name='Тема сообщения', **NULLABLE)
     ###auto_now  - update from save()##########ForeignKey Mssg
     status = models.BooleanField(default=False)
-    period = models.TimeField(auto_now=True, max_length=10, choices=PERIODS, **NULLABLE)
+    period = models.IntegerField(max_length=10, choices=PERIODS, **NULLABLE)
 
     class Meta:
         verbose_name = "Сообщение"
@@ -121,14 +127,34 @@ class Emails(models.Model):
         return f'{self.email} '
 
 class Subject(models.Model):
+    STATUS_DONE = 'done'
+    # STATUS_CREATED = 'created'
+    STATUS_STARTED = 'started'
+
+    STATUSES = (
+        (STATUS_DONE, False),
+        # (STATUS_CREATED, 'создано'),
+        (STATUS_STARTED, True),
+    )
+    PERIOD_3min = 86400
+    PERIOD_WEEK = 604800
+    PERIOD_MONTH = 2419200
+    PERIODS = (
+        (PERIOD_3min, '3min=120'),
+        (PERIOD_WEEK, 'неделя=604800'),
+        (PERIOD_MONTH, 'месяц=2419200'),
+    )
+
     name = models.ForeignKey(Client, on_delete=CASCADE)  # , related_name="product_name"
     # product_name_again = models.CharField(max_length=50, verbose_name='prod name')
     email_subj = models.ForeignKey(Emails, on_delete=CASCADE, default=1)
     mssg_subj = models.ForeignKey(Mssg, on_delete=CASCADE, default=1)
     email = models.EmailField(max_length=50, verbose_name='Емэйл в форме сабджекта', default='andreymazo@mail.ru')
-    topic = models.CharField(max_length=100, verbose_name='Тема сообщения в форме сабджекта', default='and here')
-    text = models.CharField(max_length=100, verbose_name='Текст сообщения в форме сабджекта', default='and here')
-
+    topic = models.CharField(max_length=100, verbose_name='Тема сообщения в форме сабджекта', default='ande')
+    text = models.CharField(max_length=100, verbose_name='Текст', default='and here')
+    period = models.IntegerField(max_length=10, choices=PERIODS, verbose_name='Период', default=PERIOD_3min)
+    status = models.BooleanField(default=False)
 
     def __str__(self):
-        return f"{self.name} {self.email} {self.topic} {self.text} "
+        return f"{self.name} {self.email} {self.topic} {self.text} {self.period} "## {self.status}
+# @method_decorator(csrf_exempt, name='dispatch')

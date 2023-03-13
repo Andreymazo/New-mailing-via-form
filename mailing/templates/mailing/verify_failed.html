@@ -1,0 +1,17 @@
+{% extends 'mailing/base.html' %}
+
+{% block content %}
+
+    <p>
+        Поражены вашей неудачей :(
+    </p>
+    <a href="{% url 'mailing:login' %}" class="btn btn-link">
+        На главную
+    </a> или
+    <a href="{% url 'mailing:register' %}" class="btn btn-link">
+        Попробовать еще раз
+    </a>
+    ну или
+    <a href="mailto:support@bube7.com">Напишите в саппорт</a>
+
+{% endblock %}

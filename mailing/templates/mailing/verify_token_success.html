@@ -1,0 +1,11 @@
+{% extends 'mailing/base.html' %}
+
+{% block content %}
+
+    <p>
+        Ура! Все получилось!
+    </p>
+    <a href="{% url 'boat:list' %}" class="btn btn-link">
+        На главную
+    </a> или
+{% endblock %}

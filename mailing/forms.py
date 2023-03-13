@@ -1,5 +1,5 @@
 from django import forms
-from django.contrib.auth.forms import UserCreationForm, UsernameField, AuthenticationForm
+from django.contrib.auth.forms import UserCreationForm, UsernameField, AuthenticationForm, PasswordResetForm
 
 from mailing.models import Client, Mssg, Emails
 
@@ -31,18 +31,22 @@ class StyleFormMixin:
 
 class SigninForm(StyleFormMixin, AuthenticationForm):
     pass
+
 class SignupForm(StyleFormMixin, UserCreationForm):
 
     class Meta:
         model = Client
         fields = ("email",)
         field_classes = {"username": UsernameField}
-#
+
 class ClientForm(forms.ModelForm):
     class Meta:
         model = Client
         fields = '__all__'
-#
+
+class CustomPasswordResetForm(StyleFormMixin, PasswordResetForm):
+    pass
+
 class MssgForm(forms.ModelForm):
     class Meta:
         model = Mssg

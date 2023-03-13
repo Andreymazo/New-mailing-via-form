@@ -1,7 +1,8 @@
 {%extends 'mailing/base.html'%}
+
 {% block content %}
 <h2> Creating mailing in progress ></h2>
-
+{{object}}
     <style>
 
         .formset .formset-col {
@@ -26,6 +27,7 @@
             <div class="card">
                 <div class="card-body">
                     {% csrf_token %}
+
                     {{form.as_p}}
                     <button class="btn btn-outline-secondary" type="submit" id="input-group-text">Save&Go</button>
                 </div>
@@ -70,5 +72,41 @@
         deleteText: "<span class=\"btn btn-outline-danger\">DELETE</span>",
         prefix: "tag_set",
     });
+
+
 </script>
 {% endblock %}
+
+
+<table class="table table-light table-striped table-hover align-items-center  text-center">
+          <thead>
+            <tr>
+
+                <th scope="col">Email of a Client</th>
+                <th scope="col">Name of a Client</th>
+                <th scope="col">Comment</th>
+                <th scope="col">Кнопка входа в свой аккаунт</th>
+
+            </tr>
+          </thead>
+          <tbody>
+
+           {% for object in object_list %}
+                <tr>
+
+                    <td>{{object.email}}</td>
+                    <td>{{object.name}}</td>
+                    <td>{{object.comment}}</td>
+                    <td>
+                       <td>
+                        <a class="btn.btn-default" href="{% url 'mailing:Client_update' object.pk%}" >Входим в апдейт клиента </a>
+                        </td>
+
+                    </td>
+
+                </tr>
+
+          {% endfor %}
+
+          </tbody>
+        </table>

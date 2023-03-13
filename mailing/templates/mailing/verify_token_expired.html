@@ -1,0 +1,18 @@
+
+{% extends 'users/base.html' %}
+
+{% block content %}
+
+    <p>
+        Токен не дождался :(
+    </p>
+    <p>
+    Мы удалили токен пользователя, можете пробовать еще раз
+    </p>
+    <a href="{% url 'mailing:Client_list' %}" class="btn btn-link">
+        На главную
+    </a> или
+    <a href="{% url 'mailing:register' %}" class="btn btn-link">
+        Попробовать еще раз
+    </a>
+{% endblock %}

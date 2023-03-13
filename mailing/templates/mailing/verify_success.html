@@ -1,0 +1,13 @@
+
+{% extends 'mailing/base.html' %}
+
+{% block content %}
+
+    <p>
+        И снова поздравляем! Теперь можно пользоваться сервисом
+    </p>
+    <a href="{% url 'mailing:Client_list' %}" class="btn btn-link">
+        На главную
+    </a>
+
+{% endblock %}

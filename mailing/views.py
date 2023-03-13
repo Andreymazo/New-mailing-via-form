@@ -1,19 +1,25 @@
 import time
+from datetime import datetime
+
+import pytz
 from django import  forms
 from django.conf import settings
 from django.contrib.auth.mixins import UserPassesTestMixin
-from django.contrib.auth.views import LoginView
+from django.contrib.auth.views import LoginView, PasswordResetView, PasswordResetCompleteView, PasswordResetDoneView, \
+    PasswordResetConfirmView
 from django.core.mail import send_mail
 from django.core.management import BaseCommand
 from django.db import transaction
 from django.forms import inlineformset_factory
-from django.shortcuts import render
+from django.shortcuts import render, redirect
 from django.urls import reverse_lazy
 from django.views.generic import DetailView, DeleteView, CreateView, ListView, UpdateView, TemplateView
+from rest_framework import status
+from rest_framework.generics import GenericAPIView, get_object_or_404
 
-from mailing.forms import ClientForm, SignupForm, SigninForm, MssgForm, EmailsForm
+from mailing.forms import ClientForm, SignupForm, SigninForm, MssgForm, EmailsForm, CustomPasswordResetForm
 from mailing.models import Client, Mssg, Emails, Subject
-from mailing.service import send
+from mailing.service import send, set_verify_token_and_send_mail, generate_password_and_end_mail
 
 
 class Command(BaseCommand):
@@ -91,26 +97,147 @@ class SignupView(CreateView):
     template_name = 'mailing/register.html'
     model = Client
     form_class = SignupForm
-    success_url = reverse_lazy('mailing:Client_list')
+    success_url = reverse_lazy('mailing:register_success')
 
-    # def form_valid(self, form):
-    #     if form.is_valid():
-    #         self.object = form.save()
-    #         set_verify_token_and_send_mail(self.object)
-    #     return super().form_valid(form)
+    def form_valid(self, form):
+        if form.is_valid():
+            self.object = form.save()
+            set_verify_token_and_send_mail(self.object)
+        return super().form_valid(form)
+
+
+class CustomPasswordResetView(PasswordResetView):
+    template_name = 'users/password_reset_form.html'
+    form_class = CustomPasswordResetForm
+    success_url = reverse_lazy('users:password_reset_done')
+    email_template_name = 'users/email_reset.html'
+    from_email = settings.EMAIL_HOST_USER
+
 class VerifySuccessView(TemplateView):
     success_url = reverse_lazy('mailing:Client_list')
     template_name = 'mailing/register.html'
+# class VerifySuccessView(TemplateView):
+#     template_name = 'users/verify_success.html'
+##############################################################
+# from django.conf import settings
+# from drf_yasg import openapi
+# from drf_yasg.utils import swagger_auto_schema
+#
+# class VerifyEmail(GenericAPIView ):
+#     serializer_class = serializers.EmailVerificationSerializer
+#
+#     token_param_config = openapi.Parameter(
+#         'token', in_=openapi.IN_QUERY, description='Description', type=openapi.TYPE_STRING)
+#
+#     @swagger_auto_schema(manual_parameters=[token_param_config])
+#     def get(self, request):
+#         token = request.GET.get('token')
+#         try:
+#             payload = jwt.decode(token, options={"verify_signature": False})
+#             print(payload)
+#             user = models.User.objects.get(id=payload['user_id'])
+#             if not user.is_verified:
+#                 user.is_verified = True
+#                 user.save()
+#             return response.Response({'email': 'Successfully activated'}, status=status.HTTP_200_OK)
+#         except jwt.ExpiredSignatureError as identifier:
+#             return response.Response({'error': 'Activation Expired'}, status=status.HTTP_400_BAD_REQUEST)
+#         except jwt.exceptions.DecodeError as identifier:
+#             return response.Response({'error': 'Invalid token'}, status=status.HTTP_400_BAD_REQUEST)
+############################################################################################3
 
+def verify_email(request, token):
+    current_user = Client.objects.filter(verify_token=token).first()
+    if current_user:
+        now = datetime.now(pytz.timezone(settings.TIME_ZONE))
+        if now > current_user.verify_token_expired:
+            # TODO: сделать воркер на зачистку тех, кто пробаранил 3 дня
+
+            current_user.verify_token.delete() ##сотрем их токен и выведем сообщение об этом
+            return render(request, 'mailing/verify_token_expired.html')
+
+        current_user.is_active = True
+        current_user.verify_token = None
+        current_user.verify_token_expired = None
+        current_user.save()
+        # TODO: редирект на логин
+        # login(request, current_user)##Eto to zhe samoe cto na 158 strochke
+        # return render(request, 'users/verify_token_success.html')
+        # TODO: потом авторизовать и кинуть на главную
+        return redirect('mailing:login')
+
+    return render(request, 'mailing/verify_failed.html')
+class CustomPasswordResetView(PasswordResetView):
+    template_name = 'mailing/password_reset_form.html'
+    form_class = CustomPasswordResetForm
+    success_url = reverse_lazy('mailing:password_reset_done')
+    email_template_name = 'mailing/email_reset.html'
+    from_email = settings.EMAIL_HOST_USER
+
+class CustomPasswordResetConfirmView(PasswordResetConfirmView):
+    template_name = 'mailing/reset_confirm.html'
+    success_url = reverse_lazy('mailing:password_reset_complete')
+
+
+class CustomPasswordResetDoneView(PasswordResetDoneView):
+    template_name = 'mailing/reset_done.html'
+
+
+class CustomPasswordResetCompleteView(PasswordResetCompleteView):
+    template_name = 'mailing/reset_complete.html'
+
+
+def simple_reset_password(request):
+    if request.method == 'POST':
+        current_user = Client.objects.filter(email=request.POST.get('email')).first()
+        if current_user:
+            generate_password_and_end_mail(current_user)
+    return render(request, 'mailing/simple_reset.html')
+
+
+def confirm_new_generated_password(request, token):
+    current_user = Client.objects.filter(verify_token=token).first()
+    # current_user = Client.objects.filter(email=request.GET.get('email')).first()
+    current_user.password = current_user.new_password
+    current_user.new_password = None
+    current_user.save()
+
+    return redirect('mailing:conf_new_password')
 class ClientListView(ListView):
     model = Client
     form_class = ClientForm
-    # success_url = reverse_lazy('mailing:Client_update')
+    success_url = reverse_lazy('mailing:Client_update')
     template_name = 'mailing/Client_list.html'
     # def get_queryset(self):#Pochemu to ne filtruet po useru, a vse ubiraet, poka zakommentim
-    #     print(self.request.user)##email polzovatelia
-    #     return Client.objects.filter(email=self.request.user)##filtruem po polzovatelu
+    #     print('--------------------', self.request.user)##email polzovatelia
+    #
+    def get_queryset(self):
+        queryset = super().get_queryset()
+        if self.request.user.is_active:
+            return queryset.filter(is_staff=True) ## Kazhdii mozhet smotret tolko svoi rassilki
+        return queryset
+        # user = self.request.user
+        # return user.accounts.all()
+        # if self.request.user is_authenticate:
+        # return Client.objects.filter(email=self.request.user)  ##filtruem po polzovatelu
+    # def test_func(self):
+    #     client = self.get_object()
+    #     return client.email==self.request.user or self.request.user.has_perms(perm_list=['set_email', 'view_email'])
+    # def get_object(self):
+    #     queryset = self.get_queryset()
+    #     filter = {self.request.user}
+    #     for field in self.multiple_lookup_fields:
+    #         filter[field] = self.kwargs[field]
+    #
+    #     obj = get_object_or_404(queryset, **filter)
+    #     self.check_object_permissions(self.request, obj)
+    #     return obj
 
+
+
+class UserProfileView(UpdateView):
+    # TODO: когда Оля не будет смотреть сделаем
+    pass
 class ClientView(CreateView):#Posle registracii/logina Client popadaet v etu formu, a ne na Client_list (emu znat vseh clientov ne nado
     #################Potom ClientListView zakommentiruu
     model = Client
@@ -135,7 +262,7 @@ class ClientUpdateViewWithSubject(CreateView):
     model = Mssg
     form_class = MssgForm
     success_url = reverse_lazy('mailing:Client_list')
-    template_name = 'catalog/Client_withsubject.html'
+    template_name = 'mailing/Client_withsubject.html'
 #
 #     # def clean_product_content(self):
 #     #     t = ['казинo', 'криптовалюта', 'крипта', 'биржа', 'дешево', 'бесплатно', 'обман', 'полиция', 'радар']
@@ -160,10 +287,10 @@ class ClientUpdateViewWithSubject(CreateView):
         return context_data
 
     def form_valid(self, form):
-        f = Subject.objects.all()
+        f = Subject.objects.all().filter(name_id=self.request.user.id) ##Otsilaem po emeilam otnosyashimsya k activnomu polzovatelu
         context_data = self.get_context_data()
         formset = context_data['formset']
-        print(self.request.method)
+        # print(self.request.method)
         with transaction.atomic():
             self.object = form.save()
             if formset.is_valid():
@@ -171,8 +298,10 @@ class ClientUpdateViewWithSubject(CreateView):
                 formset.save()
                 # print(self.object.link)
                 for i in f:
-                    # print(i.email)
-                    send(i.email)
+                    print(i.email)
+                    print('form.instance ', form.instance, 'i.period ------------', i.period) ##ne menyaetsya period v subjecte
+                    # time.sleep(Subject.period(self.request.user))
+                    # send(i.email)
                 # send(form.instance.link)
 
             else:
@@ -259,12 +388,14 @@ class MssgUpdateViewWithSubjectPk(CreateView):
     def form_valid(self, form):
         context_data = self.get_context_data()
         formset = context_data['formset']
-        print(self.request.method)
+        # print(self.request.method)
         with transaction.atomic():
             self.object = form.save()
             if formset.is_valid():
                 formset.instance = self.object
                 formset.save()
+                print('form.instance ', form.instance, Subject.period(self.request.user))
+                time.sleep(Subject.period)
                 # send(form.instance.email)
             else:
                 return super(MssgUpdateViewWithSubjectPk, self).form_invalid(form)
@@ -350,38 +481,6 @@ class EmailsDetailView(DetailView):
     template_name = 'mailing/Emails.html'
 
 
-# class ClientCreateView(CreateView):#Zapretili sozdanie producta
-#     model = Client
-#     # permission_required = 'catalog.create_Product'
-#     #form_class = SubjectForm
-#     form_class = ClientForm
-#     # fields = ('product_name', 'product_description', 'preview', 'price_per_unit', 'category')
-#     success_url = reverse_lazy('mailing:Client_list')
-#     template_name = 'mailing/Client_list.html'
-#
-#
-# class ClientUpdateView(UpdateView):#LoginRequiredMixin,
-#     model = Client
-#     # form_class = ClientForm
-#     # success_url = reverse_lazy('catalog:Product_list')
-#     template_name = 'mailing/Client_list.html'
-
-#
-# class ClientDeleteView(DeleteView):#UserPassesTestMixin,
-#     model = Client
-#     form_class = ClientForm
-#     success_url = reverse_lazy('catalog:Product_list')
-#     template_name = 'catalog/product_confirm_delete.html'
-#
-#     # def test_func(self):
-#     #     return self.request.user.is_superuser
-#
-#
-# class ClientDetailView(DetailView):#LoginRequiredMixin,
-#     model = Client
-#     # form_class = ProductForm
-#     success_url = reverse_lazy('catalog:Product_list')
-#     template_name = 'catalog/Product_detail.html'
 #######################Primer sozdania formi dlia zapolnenia polya
 # from django import forms
 # from django.shortcuts import get_object_or_404

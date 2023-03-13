@@ -1,0 +1,12 @@
+{% extends 'mailing/base.html' %}
+
+{% block content %}
+
+    <p>
+        Иди на почту и проверяй ссылку
+    </p>
+    <a href="{% url 'mailing:Client_list' %}" class="btn btn-link">
+        На главную
+    </a>
+
+{% endblock %}
