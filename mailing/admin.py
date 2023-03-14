@@ -29,3 +29,14 @@ class EmailsAdmin(admin.ModelAdmin):
 class SubjectAdmin(admin.ModelAdmin):
     list_display = ("name", "email_subj", "mssg_subj", "email", "text")
     list_filter = ["email"]
+
+
+from blog.models import Article
+
+# Register your models here.
+admin.register(Article)
+
+
+@admin.register(Article)
+class ArticleAdmin(admin.ModelAdmin):
+    list_display = ["title", ]

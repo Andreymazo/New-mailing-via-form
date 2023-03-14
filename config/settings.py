@@ -20,9 +20,16 @@ env_path = BASE_DIR / '.env'
 load_dotenv(dotenv_path=env_path)
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
-BASE_DIR = Path(__file__).resolve().parent.parent
+# STATICFILES_DIRS = [ os.path.join(BASE_DIR, 'static'),]
+# STATIC_FILES_DIRS = (
+#     BASE_DIR / 'static',
+# )
 
 BASE_URL=os.getenv('BASE_URL')
+
+
+STATIC_ROOT = os.path.join(BASE_DIR, "static")
+
 
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/4.1/howto/deployment/checklist/
@@ -52,6 +59,7 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'mailing',
+    'blog',
     'celery',
     'redis',
     # 'rest_framework_simplejwt',

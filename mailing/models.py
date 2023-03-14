@@ -84,7 +84,7 @@ class Mssg(models.Model):
     text = models.CharField(max_length=100, verbose_name='Тема сообщения', **NULLABLE)
     ###auto_now  - update from save()##########ForeignKey Mssg
     status = models.BooleanField(default=False)
-    period = models.IntegerField(max_length=10, choices=PERIODS, **NULLABLE)
+    period = models.IntegerField(choices=PERIODS, **NULLABLE)
 
     class Meta:
         verbose_name = "Сообщение"
@@ -152,7 +152,7 @@ class Subject(models.Model):
     email = models.EmailField(max_length=50, verbose_name='Емэйл в форме сабджекта', default='andreymazo@mail.ru')
     topic = models.CharField(max_length=100, verbose_name='Тема сообщения в форме сабджекта', default='ande')
     text = models.CharField(max_length=100, verbose_name='Текст', default='and here')
-    period = models.IntegerField(max_length=10, choices=PERIODS, verbose_name='Период', default=PERIOD_3min)
+    period = models.IntegerField(choices=PERIODS, verbose_name='Период', default=PERIOD_3min)
     status = models.BooleanField(default=False)
 
     def __str__(self):

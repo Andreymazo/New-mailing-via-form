@@ -14,7 +14,9 @@
           </thead>
 
           <tbody>
+          {% block content %}
            {{object}}
+          {% endblock %}
                 <tr>
                     <td>{{i.link}}</td>
                     <td>{{i.text}}</td>
