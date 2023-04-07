@@ -21,31 +21,29 @@ load_dotenv(dotenv_path=env_path)
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 # STATICFILES_DIRS = [ os.path.join(BASE_DIR, 'static'),]
-# STATIC_FILES_DIRS = (
-#     BASE_DIR / 'static',
-# )
-
+STATIC_FILES_DIRS = (
+    BASE_DIR / 'static',
+)
+STATIC_URL = 'static/'
+STATICFILES_DIRS = (
+    BASE_DIR / 'static',
+)
 BASE_URL=os.getenv('BASE_URL')
 
-
-STATIC_ROOT = os.path.join(BASE_DIR, "static")
-
+# STATIC_ROOT = os.path.join(BASE_DIR, "static")
 
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/4.1/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = 'django-insecure-x5*83-#y)-z)8f%nl*8fegr^+#jq()=*^9+cnjc1@#jlv*)51l'
+SECRET_KEY = os.getenv('SECRET_KEY')
+
 
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
 ALLOWED_HOSTS = []
 
-STATIC_URL = 'static/'
-STATIC_FILES_DIRS = (
-    BASE_DIR / 'static',
-)
 MEDIA_ROOT = BASE_DIR / 'media'
 MEDIA_URL = '/media/'
 
